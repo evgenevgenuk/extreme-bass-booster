@@ -10,7 +10,7 @@ use zip::write::SimpleFileOptions;
 use zip::{CompressionMethod, ZipArchive, ZipWriter};
 
 use crate::audio::{self, extension_of, is_supported};
-use crate::dsp::{self, BoostMode};
+use crate::dsp::{self, BoostMode, Equalizer};
 
 #[derive(Debug, Default)]
 pub struct ZipReport {
@@ -26,6 +26,7 @@ pub fn process_zip(
     input: &Path,
     output: &Path,
     mode: BoostMode,
+    eq: Equalizer,
     mut progress: impl FnMut(usize, usize, &str),
 ) -> Result<ZipReport> {
     let mut archive = ZipArchive::new(File::open(input).context("cannot open input ZIP")?)
@@ -58,7 +59,7 @@ pub fn process_zip(
         if is_supported(&name) {
             let ext = extension_of(&name);
             match audio::decode_bytes(data.clone(), ext.as_deref())
-                .and_then(|a| audio::wav_bytes(&dsp::boost(&a, mode)))
+                .and_then(|a| audio::wav_bytes(&dsp::process(&a, mode, &eq)))
             {
                 Ok(wav) => {
                     let mut out_name = wav_name(&name);
@@ -119,11 +120,26 @@ mod tests {
     #[test]
     #[ignore]
     fn zip_file() {
-        let input = std::path::PathBuf::from(std::env::var("EBB_TEST_ZIP").expect("set EBB_TEST_ZIP"));
+        let input =
+            std::path::PathBuf::from(std::env::var("EBB_TEST_ZIP").expect("set EBB_TEST_ZIP"));
         let output = input.with_extension("out.zip");
-        let r = process_zip(&input, &output, BoostMode::Hyper, |_, _, _| {}).unwrap();
-        println!("ZIP boosted={} copied={} failed={:?}", r.boosted, r.copied, r.failed);
-        let names: Vec<String> = ZipArchive::new(File::open(&output).unwrap()).unwrap().file_names().map(String::from).collect();
+        let r = process_zip(
+            &input,
+            &output,
+            BoostMode::Hyper,
+            Equalizer::default(),
+            |_, _, _| {},
+        )
+        .unwrap();
+        println!(
+            "ZIP boosted={} copied={} failed={:?}",
+            r.boosted, r.copied, r.failed
+        );
+        let names: Vec<String> = ZipArchive::new(File::open(&output).unwrap())
+            .unwrap()
+            .file_names()
+            .map(String::from)
+            .collect();
         println!("ZIP entries: {names:?}");
     }
 

@@ -1,6 +1,6 @@
 [package]
 name = "extreme-bass-booster"
-version = "1.0.0"
+version = "1.1.0"
 edition = "2021"
 description = "Desktop bass booster for almost any audio format, with batch ZIP processing"
 license = "MIT"

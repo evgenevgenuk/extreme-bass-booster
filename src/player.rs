@@ -22,24 +22,34 @@ impl Player {
     pub fn new() -> Result<Self> {
         let (stream, handle) =
             OutputStream::try_default().map_err(|e| anyhow!("no audio output device: {e}"))?;
-        Ok(Self { _stream: stream, handle, sink: None, audio: None, offset: 0.0 })
+        Ok(Self {
+            _stream: stream,
+            handle,
+            sink: None,
+            audio: None,
+            offset: 0.0,
+        })
     }
 
-    pub fn play(&mut self, audio: Arc<AudioData>) -> Result<()> {
+    /// Starts playing `audio` from `secs` seconds.
+    pub fn play_at(&mut self, audio: Arc<AudioData>, secs: f64) -> Result<()> {
         self.audio = Some(audio);
-        self.play_from(0.0)
+        self.play_from(secs)
     }
 
     fn play_from(&mut self, secs: f64) -> Result<()> {
         if let Some(s) = self.sink.take() {
             s.stop();
         }
-        let Some(audio) = self.audio.clone() else { return Ok(()) };
+        let Some(audio) = self.audio.clone() else {
+            return Ok(());
+        };
         let secs = secs.clamp(0.0, audio.duration_secs());
         let frame = (secs * audio.sample_rate as f64) as usize;
         let start = (frame * audio.channels).min(audio.samples.len());
 
-        let sink = Sink::try_new(&self.handle).map_err(|e| anyhow!("cannot start playback: {e}"))?;
+        let sink =
+            Sink::try_new(&self.handle).map_err(|e| anyhow!("cannot start playback: {e}"))?;
         sink.append(SamplesBuffer::new(
             audio.channels as u16,
             audio.sample_rate,

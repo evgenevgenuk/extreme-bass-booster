@@ -70,7 +70,12 @@ fn decode(source: Box<dyn MediaSource>, ext: Option<&str>) -> Result<AudioData> 
     }
 
     let probed = symphonia::default::get_probe()
-        .format(&hint, mss, &FormatOptions::default(), &MetadataOptions::default())
+        .format(
+            &hint,
+            mss,
+            &FormatOptions::default(),
+            &MetadataOptions::default(),
+        )
         .map_err(|e| anyhow!("unsupported or corrupted file: {e}"))?;
     let mut format = probed.format;
 
@@ -120,7 +125,11 @@ fn decode(source: Box<dyn MediaSource>, ext: Option<&str>) -> Result<AudioData> 
     if samples.is_empty() {
         return Err(anyhow!("file contains no audio"));
     }
-    Ok(AudioData { samples, channels, sample_rate })
+    Ok(AudioData {
+        samples,
+        channels,
+        sample_rate,
+    })
 }
 
 fn write_wav_to<W: Write + Seek>(audio: &AudioData, out: W) -> Result<()> {
@@ -152,7 +161,11 @@ mod tests {
 
     #[test]
     fn wav_roundtrip() {
-        let a = AudioData { samples: vec![0.0, 0.5, -0.5, 0.25], channels: 2, sample_rate: 22_050 };
+        let a = AudioData {
+            samples: vec![0.0, 0.5, -0.5, 0.25],
+            channels: 2,
+            sample_rate: 22_050,
+        };
         let b = decode_bytes(wav_bytes(&a).unwrap(), Some("wav")).unwrap();
         assert_eq!((b.channels, b.sample_rate, b.samples.len()), (2, 22_050, 4));
         assert!((b.samples[1] - 0.5).abs() < 1e-3);
@@ -166,8 +179,17 @@ mod tests {
         for entry in std::fs::read_dir(dir).unwrap() {
             let path = entry.unwrap().path();
             match decode_file(&path) {
-                Ok(a) => println!("OK   {:<12} {:.2}s {}Hz {}ch", path.file_name().unwrap().to_string_lossy(), a.duration_secs(), a.sample_rate, a.channels),
-                Err(e) => println!("FAIL {:<12} {e}", path.file_name().unwrap().to_string_lossy()),
+                Ok(a) => println!(
+                    "OK   {:<12} {:.2}s {}Hz {}ch",
+                    path.file_name().unwrap().to_string_lossy(),
+                    a.duration_secs(),
+                    a.sample_rate,
+                    a.channels
+                ),
+                Err(e) => println!(
+                    "FAIL {:<12} {e}",
+                    path.file_name().unwrap().to_string_lossy()
+                ),
             }
         }
     }
