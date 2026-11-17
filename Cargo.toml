@@ -1,6 +1,6 @@
 [package]
 name = "extreme-bass-booster"
-version = "1.1.0"
+version = "1.2.0"
 edition = "2021"
 description = "Desktop bass booster for almost any audio format, with batch ZIP processing"
 license = "MIT"
@@ -14,6 +14,10 @@ rodio = { version = "0.20", default-features = false }
 symphonia = { version = "0.5", features = ["all"] }
 hound = "3.5"
 zip = { version = "2", default-features = false, features = ["deflate"] }
+image = { version = "0.25", default-features = false, features = ["png"] }
+
+[build-dependencies]
+winresource = "0.1"
 
 [profile.release]
 opt-level = 3

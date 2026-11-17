@@ -17,6 +17,17 @@ use audio::{AudioData, SUPPORTED_EXTENSIONS};
 use dsp::{BoostMode, Equalizer, EQ_BANDS, EQ_RANGE_DB};
 use player::Player;
 
+/// App picture, also used as the window icon.
+const ICON_PNG: &[u8] = include_bytes!("../assets/icon.png");
+
+/// Decodes the embedded PNG into RGBA pixels: (width, height, pixels).
+fn icon_rgba() -> (u32, u32, Vec<u8>) {
+    let img = image::load_from_memory(ICON_PNG)
+        .expect("embedded icon is a valid PNG")
+        .to_rgba8();
+    (img.width(), img.height(), img.into_raw())
+}
+
 const BG: Color32 = Color32::from_rgb(30, 30, 30);
 const ACCENT: Color32 = Color32::from_rgb(0, 200, 255);
 
@@ -30,6 +41,7 @@ enum Msg {
 }
 
 struct App {
+    logo: egui::TextureHandle,
     source_path: Option<PathBuf>,
     source: Option<Arc<AudioData>>,
     boost: u32,
@@ -51,6 +63,13 @@ impl App {
         visuals.window_fill = BG;
         cc.egui_ctx.set_visuals(visuals);
 
+        let (w, h, rgba) = icon_rgba();
+        let logo = cc.egui_ctx.load_texture(
+            "logo",
+            egui::ColorImage::from_rgba_unmultiplied([w as usize, h as usize], &rgba),
+            egui::TextureOptions::LINEAR,
+        );
+
         let (player, status) = match Player::new() {
             Ok(p) => (Some(p), "Ready. Load an audio file to start.".to_string()),
             Err(e) => (None, format!("Playback disabled: {e}")),
@@ -67,6 +86,7 @@ impl App {
             seek_dragging: false,
             eq: Equalizer::default(),
             playing_with: None,
+            logo,
         }
     }
 
@@ -429,7 +449,9 @@ impl eframe::App for App {
                 .auto_shrink([false, false])
                 .show(ui, |ui| {
                     ui.with_layout(Layout::top_down(Align::Center), |ui| {
-                        ui.add_space(16.0);
+                        ui.add_space(14.0);
+                        ui.add(egui::Image::new(&self.logo).fit_to_exact_size(Vec2::splat(110.0)));
+                        ui.add_space(4.0);
                         ui.label(
                             RichText::new("Extreme Bass Booster 9000")
                                 .size(28.0)
@@ -618,10 +640,16 @@ impl eframe::App for App {
 }
 
 fn main() -> eframe::Result<()> {
+    let (w, h, rgba) = icon_rgba();
     let options = eframe::NativeOptions {
         viewport: egui::ViewportBuilder::default()
             .with_title("Extreme Bass Booster 9000")
-            .with_inner_size([620.0, 900.0])
+            .with_icon(egui::IconData {
+                rgba,
+                width: w,
+                height: h,
+            })
+            .with_inner_size([620.0, 1000.0])
             .with_min_inner_size([580.0, 500.0]),
         ..Default::default()
     };
