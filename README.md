@@ -4,6 +4,8 @@ A small desktop app written in Rust that boosts the bass of your music. It opens
 
 > **Warning:** high boost levels and HYPER MAX mode are extremely loud and heavily distorted on purpose. Turn your volume down before you press Play. Your speakers and ears will thank you.
 
+<p align="center"><img src="docs/demo.gif" alt="Extreme Bass Booster demo: boost slider, EQ preset, playback" width="420"></p>
+
 ## Features
 
 - **Opens almost any audio format:** MP3, FLAC, WAV, OGG Vorbis, AAC / M4A, ALAC, AIFF, CAF, MKV / WebM audio, ADPCM and more (decoding by [Symphonia](https://github.com/pdeljanov/Symphonia), pure Rust).
@@ -14,6 +16,10 @@ A small desktop app written in Rust that boosts the bass of your music. It opens
 - **Batch ZIP mode:** pick a ZIP, and every supported audio file inside is boosted and written to a new ZIP as WAV. Folder structure is kept and other files are copied unchanged.
 - **Responsive UI:** decoding and processing run on a background thread.
 - **Single executable,** no runtime or installer needed.
+
+## Screenshot
+
+<p align="center"><img src="docs/screenshot.png" alt="Extreme Bass Booster main window" width="520"></p>
 
 ## Download
 
